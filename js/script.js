@@ -18,26 +18,36 @@ const renderSelectOptions = (valuesArr, select) => (
   })
 );
 
-const renderRequestFields = (renderFields) => (
-  renderFields
+const renderSelect = (name, required, values, label) => {
+  const valuesArr = Object.keys(values);
+  const fieldContainer = document.createElement('div');
+  const fieldLabel = document.createElement('label');
+
+  const select = document.createElement('select');
+  select.name = name;
+  select.id = name;
+  required && select.setAttribute('required', 'required');
+
+  renderSelectOptions(valuesArr, select);
+
+  fieldLabel.innerText = label;
+  fieldLabel.htmlFor = name;
+
+  fieldContainer.appendChild(fieldLabel);
+  fieldContainer.appendChild(select);
+
+  form.appendChild(fieldContainer);
+}
+
+const renderRequestFields = (requestFields) => (
+  requestFields
     .map(({ name, type, required, values, placeholder, label }) => {
-      const valuesArr = Object.keys(values);
-      const fieldContainer = document.createElement('div');
-      const fieldLabel = document.createElement('label');
-
-      const select = document.createElement('select');
-      select.name = name;
-      select.id = name;
-
-      renderSelectOptions(valuesArr, select);
-
-      fieldLabel.innerText = name;
-      fieldLabel.htmlFor = name;
-
-      fieldContainer.appendChild(fieldLabel);
-      fieldContainer.appendChild(select);
-
-      form.appendChild(fieldContainer);
+      switch (type) {
+        case 'enumerable':
+          renderSelect(name, required, values, label);
+        default:
+          null
+      }
     })
 )
 
