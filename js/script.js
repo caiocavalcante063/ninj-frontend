@@ -82,8 +82,8 @@ const renderInput = (name, type, assignableInputType, required, placeholder, lab
   form.appendChild(fieldContainer);
 }
 
-const renderFields = (requestFields) => (
-  requestFields
+const renderFields = (fields) => (
+  fields
     .map(({ name, type, required, values, placeholder, label }) => {
       switch (type) {
         case 'enumerable':
@@ -103,14 +103,40 @@ const renderFields = (requestFields) => (
     })
 )
 
+const formBtnClickListener = () => {
+  const formBtns = Array.from(document.querySelectorAll('.form-btn'));
+  const stepsNumber = Number(localStorage.getItem('stepsNumber'));
+  let currentStep = Number(localStorage.getItem('currentStep'));
+
+  formBtns.map(btn => 
+    btn.addEventListener('click', (event) => {
+      const btnClassname = event.target.className;
+
+      if (btnClassname.includes('next') && currentStep <= stepsNumber - 1) {
+        currentStep += 1;
+        localStorage.setItem('currentStep', currentStep)
+      } else if (btnClassname.includes('previous') && currentStep >= 2) {
+        currentStep -= 1;
+        localStorage.setItem('currentStep', currentStep)
+      } else {
+        // submit
+      }
+    })
+  )
+}
+
 const renderForm = async () => {
   const fields = await Promise.all([getRequestFields(), getUserFields()])
-
   const mergedFields = [].concat.apply([], fields)
+  const stepsNumber = mergedFields.length;
+
+  localStorage.setItem('stepsNumber', stepsNumber)
+  localStorage.setItem('currentStep', 1)
 
   renderFields(mergedFields);
 }
 
 window.onload = () => {
   renderForm();
+  formBtnClickListener();
 };
