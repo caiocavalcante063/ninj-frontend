@@ -7,6 +7,13 @@ const getRequestFields = async () => {
   return data;
 }
 
+const getUserFields = async () => {
+  const userFields = await fetch('http://localhost:3000/user-fields');
+  const data = await userFields.json();
+
+  return data;
+}
+
 const renderSelectOptions = (valuesArr, select) => (
   valuesArr.map(value => {
     const option = document.createElement('option');
@@ -46,29 +53,49 @@ const renderSelect = (name, required, values, label) => {
   form.appendChild(fieldContainer);
 }
 
-const renderText = (name, type, required, placeholder, label) => {
-  const textInput = document.createElement('input');
-  
-  textInput.type = 'text';
-  textInput.className = `text-${type}`;
-  textInput.placeholder = placeholder;
+const checkAssignableInputType = (type) => {
+  switch (type) {
+    case 'small_text':
+    case 'big_text':
+      return 'text';
+    case 'cep':
+      return 'number';
+    case 'phone':
+      return 'tel';
+    default:
+      return type
+  }
+}
 
-  required && textInput.setAttribute('required', 'required');
+const renderInput = (name, type, assignableInputType, required, placeholder, label) => {
+  const input = document.createElement('input');
 
-  const fieldContainer = renderFieldContainer(label, name, textInput);
+  input.type =  assignableInputType;
+
+  input.className = `text-${type}`;
+  input.placeholder = placeholder;
+
+  required && input.setAttribute('required', 'required');
+
+  const fieldContainer = renderFieldContainer(label, name, input);
 
   form.appendChild(fieldContainer);
 }
 
-const renderRequestFields = (requestFields) => (
+const renderFields = (requestFields) => (
   requestFields
     .map(({ name, type, required, values, placeholder, label }) => {
       switch (type) {
         case 'enumerable':
           renderSelect(name, required, values, label);
           break;
+        case 'small_text':
         case 'big_text':
-          renderText(name, type, required, placeholder, label);
+        case 'cep':
+        case 'email':
+        case 'phone':
+          const assignableInputType = checkAssignableInputType(type)
+          renderInput(name, type, assignableInputType, required, placeholder, label);
           break;
         default:
           null
@@ -76,11 +103,14 @@ const renderRequestFields = (requestFields) => (
     })
 )
 
-const renderFields = async () => {
-  const requestFields = await getRequestFields();
-  renderRequestFields(requestFields);
+const renderForm = async () => {
+  const fields = await Promise.all([getRequestFields(), getUserFields()])
+
+  const mergedFields = [].concat.apply([], fields)
+
+  renderFields(mergedFields);
 }
 
 window.onload = () => {
-  renderFields();
+  renderForm();
 };
